@@ -8,7 +8,7 @@ class AuthStateProvider {
   static AuthStateProvider? _instance;
   late final StateNotifierProvider<AuthNotifier, AuthState> provider;
 
-  AuthStateProvider get instance => _instance!;
+  static AuthStateProvider get instance => _instance!;
 
   static void initialize({
     required Duration timeout,
