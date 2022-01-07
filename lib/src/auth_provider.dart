@@ -8,34 +8,44 @@ class AuthStateProvider {
   static AuthStateProvider? _instance;
   late final StateNotifierProvider<AuthNotifier, AuthState> provider;
 
-  static Future<void> initialize(Duration timeout) async {
-    _instance ??= AuthStateProvider._private(timeout);
+  static void initialize({
+    required Duration timeout,
+    required FirebaseAuth firebaseAuth,
+  }) {
+    _instance ??= AuthStateProvider._private(
+      timeout,
+      firebaseAuth,
+    );
   }
 
-  AuthStateProvider._private(Duration timeOut) {
+  AuthStateProvider._private(Duration timeOut, FirebaseAuth firebaseAuth) {
     provider = StateNotifierProvider(
-      (ref) => AuthNotifier(timeOut),
+      (ref) => AuthNotifier(
+        timeOut: timeOut,
+        firebaseAuth: firebaseAuth,
+      ),
     );
   }
 }
 
 class AuthNotifier extends StateNotifier<AuthState> {
-  AuthNotifier(this._timeOut) : super(const AuthInitial()) {
-    auth = FirebaseAuth.instance;
-  }
+  AuthNotifier({
+    required this.timeOut,
+    required this.firebaseAuth,
+  }) : super(const AuthInitial());
 
-  late FirebaseAuth auth;
+  final FirebaseAuth firebaseAuth;
+  final Duration timeOut;
   late String phone;
   late String _verificationId;
   int? _resendToken;
-  final Duration _timeOut;
 
   Future<void> requestOtp(String phoneNumber) async {
     state = const Requesting();
     phone = phoneNumber;
-    auth.verifyPhoneNumber(
+    firebaseAuth.verifyPhoneNumber(
       phoneNumber: phone,
-      timeout: _timeOut,
+      timeout: timeOut,
       verificationCompleted: (phoneAuthCredential) {
         state = AutoVerificationCompleted(phoneAuthCredential);
       },
@@ -56,10 +66,10 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
   Future<void> resendOtp() async {
     state = const ReRequesting();
-    auth.verifyPhoneNumber(
+    firebaseAuth.verifyPhoneNumber(
       forceResendingToken: _resendToken,
       phoneNumber: phone,
-      timeout: _timeOut,
+      timeout: timeOut,
       verificationCompleted: (credential) async {
         state = AutoVerificationCompleted(credential);
       },
@@ -87,7 +97,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
     try {
       final UserCredential userCredential =
-          await auth.signInWithCredential(authCredential);
+          await firebaseAuth.signInWithCredential(authCredential);
       state = VerificationCompleted(userCredential);
     } catch (e) {
       state = const InvalidCode();
