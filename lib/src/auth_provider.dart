@@ -1,8 +1,10 @@
+export 'auth_states.dart';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:meta/meta.dart';
 
-part 'auth_states.dart';
+import 'auth_states.dart';
 
 class AuthStateProvider {
   static AuthStateProvider? _instance;
